@@ -18,6 +18,7 @@ package proxyroute
 
 import (
 	"context"
+	"strings"
 
 	"github.com/pkg/errors"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -126,10 +127,14 @@ func (e *external) Observe(ctx context.Context, mg resource.Managed) (managed.Ex
 
 	route, err := e.client.GetProxyRoute(ctx, serverName, routeID)
 	if err != nil {
-		// If the route doesn't exist, we'll create it
-		return managed.ExternalObservation{
-			ResourceExists: false,
-		}, nil
+		// If the route is not found, treat it as non-existent
+		if strings.Contains(err.Error(), "not found") {
+			return managed.ExternalObservation{
+				ResourceExists: false,
+			}, nil
+		}
+		// For other errors, return them
+		return managed.ExternalObservation{}, errors.Wrap(err, errGetRoute)
 	}
 
 	// Update the status with observed values
