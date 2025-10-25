@@ -1,0 +1,61 @@
+apiVersion: config.caddy.crossplane.io/v1alpha1
+kind: ProxyRoute
+metadata:
+  name: example-proxy
+spec:
+  forProvider:
+    # Caddy admin API endpoint
+    caddyEndpoint: http://caddy-server:2019
+
+    # Optional: specify server name (defaults to "srv0")
+    # serverName: srv0
+
+    # Match conditions for this route
+    match:
+      host:
+        - example.com
+        - www.example.com
+      path:
+        - /api/*
+
+    # Backend upstreams
+    upstreams:
+      - dial: backend1:8080
+      - dial: backend2:8080
+      - dial: backend3:8080
+
+    # Load balancing configuration
+    loadBalancing:
+      policy: round_robin
+      tryDuration: 30s
+      tryInterval: 250ms
+
+    # Header manipulation
+    headers:
+      request:
+        set:
+          X-Forwarded-Proto:
+            - https
+        add:
+          X-Custom-Header:
+            - value1
+      response:
+        set:
+          X-Served-By:
+            - caddy-proxy
+
+    # Health checks
+    healthChecks:
+      active:
+        path: /health
+        interval: 30s
+        timeout: 5s
+      passive:
+        maxFails: 3
+        unhealthyLatency: 3s
+
+    # TLS for upstream connections
+    tls:
+      enabled: false
+      # serverName: backend.internal
+      # insecureSkipVerify: false

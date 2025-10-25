@@ -20,16 +20,16 @@ import (
 	"github.com/crossplane/crossplane-runtime/v2/pkg/controller"
 	ctrl "sigs.k8s.io/controller-runtime"
 
-	"github.com/crossplane/provider-template/internal/controller/config"
-	"github.com/crossplane/provider-template/internal/controller/mytype"
+	"github.com/crossplane/provider-caddy/internal/controller/config"
+	"github.com/crossplane/provider-caddy/internal/controller/proxyroute"
 )
 
-// SetupGated creates all Template controllers with safe-start support and adds them to
+// SetupGated creates all Caddy controllers with safe-start support and adds them to
 // the supplied manager.
 func SetupGated(mgr ctrl.Manager, o controller.Options) error {
 	for _, setup := range []func(ctrl.Manager, controller.Options) error{
 		config.Setup,
-		mytype.SetupGated,
+		proxyroute.SetupGated,
 	} {
 		if err := setup(mgr, o); err != nil {
 			return err

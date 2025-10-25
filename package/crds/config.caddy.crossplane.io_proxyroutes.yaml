@@ -1,0 +1,436 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.18.0
+  name: proxyroutes.config.caddy.crossplane.io
+spec:
+  group: config.caddy.crossplane.io
+  names:
+    categories:
+    - crossplane
+    - managed
+    - caddy
+    kind: ProxyRoute
+    listKind: ProxyRouteList
+    plural: proxyroutes
+    singular: proxyroute
+  scope: Cluster
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .status.conditions[?(@.type=='Ready')].status
+      name: READY
+      type: string
+    - jsonPath: .status.conditions[?(@.type=='Synced')].status
+      name: SYNCED
+      type: string
+    - jsonPath: .metadata.annotations.crossplane\.io/external-name
+      name: EXTERNAL-NAME
+      type: string
+    - jsonPath: .metadata.creationTimestamp
+      name: AGE
+      type: date
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: A ProxyRoute configures a Caddy reverse proxy route.
+        properties:
+          apiVersion:
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+            type: string
+          kind:
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: A ProxyRouteSpec defines the desired state of a ProxyRoute.
+            properties:
+              deletionPolicy:
+                default: Delete
+                description: |-
+                  DeletionPolicy specifies what will happen to the underlying external
+                  when this managed resource is deleted - either "Delete" or "Orphan" the
+                  external resource.
+                  This field is planned to be deprecated in favor of the ManagementPolicies
+                  field in a future release. Currently, both could be set independently and
+                  non-default values would be honored if the feature flag is enabled.
+                  See the design doc for more information: https://github.com/crossplane/crossplane/blob/499895a25d1a1a0ba1604944ef98ac7a1a71f197/design/design-doc-observe-only-resources.md?plain=1#L223
+                enum:
+                - Orphan
+                - Delete
+                type: string
+              forProvider:
+                description: ProxyRouteParameters define the desired state of a Caddy
+                  reverse proxy route.
+                properties:
+                  caddyEndpoint:
+                    description: CaddyEndpoint is the Caddy admin API endpoint (e.g.,
+                      "http://localhost:2019")
+                    type: string
+                  headers:
+                    description: Headers allows manipulation of request and response
+                      headers.
+                    properties:
+                      request:
+                        description: Request defines operations on request headers.
+                        properties:
+                          add:
+                            additionalProperties:
+                              items:
+                                type: string
+                              type: array
+                            description: Add adds header values.
+                            type: object
+                          delete:
+                            description: Delete removes headers.
+                            items:
+                              type: string
+                            type: array
+                          set:
+                            additionalProperties:
+                              items:
+                                type: string
+                              type: array
+                            description: Set sets header values, replacing existing
+                              ones.
+                            type: object
+                        type: object
+                      response:
+                        description: Response defines operations on response headers.
+                        properties:
+                          add:
+                            additionalProperties:
+                              items:
+                                type: string
+                              type: array
+                            description: Add adds header values.
+                            type: object
+                          delete:
+                            description: Delete removes headers.
+                            items:
+                              type: string
+                            type: array
+                          set:
+                            additionalProperties:
+                              items:
+                                type: string
+                              type: array
+                            description: Set sets header values, replacing existing
+                              ones.
+                            type: object
+                        type: object
+                    type: object
+                  healthChecks:
+                    description: HealthChecks defines active and passive health checks
+                      for upstreams.
+                    properties:
+                      active:
+                        description: Active defines active health checks.
+                        properties:
+                          interval:
+                            description: Interval is how often to perform active health
+                              checks.
+                            type: string
+                          path:
+                            description: Path is the URI path to use for health checks.
+                            type: string
+                          timeout:
+                            description: Timeout is how long to wait for a response.
+                            type: string
+                        type: object
+                      passive:
+                        description: Passive defines passive health checks.
+                        properties:
+                          maxFails:
+                            description: MaxFails is the maximum number of failed
+                              requests before marking unhealthy.
+                            type: integer
+                          unhealthyLatency:
+                            description: UnhealthyLatency is the latency threshold
+                              to consider unhealthy.
+                            type: string
+                        type: object
+                    type: object
+                  loadBalancing:
+                    description: LoadBalancing defines the load balancing policy.
+                    properties:
+                      policy:
+                        description: |-
+                          Policy is the load balancing policy to use.
+                          Options: "random", "round_robin", "least_conn", "ip_hash", "header", "cookie"
+                        enum:
+                        - random
+                        - round_robin
+                        - least_conn
+                        - ip_hash
+                        - header
+                        - cookie
+                        type: string
+                      tryDuration:
+                        description: TryDuration is how long to try selecting available
+                          backends.
+                        type: string
+                      tryInterval:
+                        description: TryInterval is how long to wait between retries.
+                        type: string
+                    type: object
+                  match:
+                    description: Match defines the conditions to match for this route.
+                    properties:
+                      headers:
+                        additionalProperties:
+                          items:
+                            type: string
+                          type: array
+                        description: Headers matches request headers.
+                        type: object
+                      host:
+                        description: Host matches the request host (domain names).
+                        items:
+                          type: string
+                        type: array
+                      method:
+                        description: Method matches the HTTP method.
+                        items:
+                          type: string
+                        type: array
+                      path:
+                        description: |-
+                          Path matches the request path.
+                          Supports wildcards like "/api/*"
+                        items:
+                          type: string
+                        type: array
+                    type: object
+                  serverName:
+                    description: |-
+                      ServerName is the name of the Caddy server to add this route to.
+                      If not specified, defaults to "srv0".
+                    type: string
+                  tls:
+                    description: TLS defines TLS settings for upstream connections.
+                    properties:
+                      enabled:
+                        description: Enabled enables TLS for upstream connections.
+                        type: boolean
+                      insecureSkipVerify:
+                        description: InsecureSkipVerify disables TLS certificate verification.
+                        type: boolean
+                      serverName:
+                        description: ServerName is the server name for TLS verification.
+                        type: string
+                    type: object
+                  upstreams:
+                    description: Upstreams defines the backend servers to proxy to.
+                    items:
+                      description: Upstream represents a backend server.
+                      properties:
+                        dial:
+                          description: |-
+                            Dial is the address to dial to connect to the upstream.
+                            Format: "host:port" or just "host" (defaults to port 80/443)
+                          type: string
+                        maxRequests:
+                          description: MaxRequests is the maximum number of concurrent
+                            requests to this upstream.
+                          type: integer
+                      required:
+                      - dial
+                      type: object
+                    minItems: 1
+                    type: array
+                required:
+                - caddyEndpoint
+                - upstreams
+                type: object
+              managementPolicies:
+                default:
+                - '*'
+                description: |-
+                  THIS IS A BETA FIELD. It is on by default but can be opted out
+                  through a Crossplane feature flag.
+                  ManagementPolicies specify the array of actions Crossplane is allowed to
+                  take on the managed and external resources.
+                  This field is planned to replace the DeletionPolicy field in a future
+                  release. Currently, both could be set independently and non-default
+                  values would be honored if the feature flag is enabled. If both are
+                  custom, the DeletionPolicy field will be ignored.
+                  See the design doc for more information: https://github.com/crossplane/crossplane/blob/499895a25d1a1a0ba1604944ef98ac7a1a71f197/design/design-doc-observe-only-resources.md?plain=1#L223
+                  and this one: https://github.com/crossplane/crossplane/blob/444267e84783136daa93568b364a5f01228cacbe/design/one-pager-ignore-changes.md
+                items:
+                  description: |-
+                    A ManagementAction represents an action that the Crossplane controllers
+                    can take on an external resource.
+                  enum:
+                  - Observe
+                  - Create
+                  - Update
+                  - Delete
+                  - LateInitialize
+                  - '*'
+                  type: string
+                type: array
+              providerConfigRef:
+                default:
+                  name: default
+                description: |-
+                  ProviderConfigReference specifies how the provider that will be used to
+                  create, observe, update, and delete this managed resource should be
+                  configured.
+                properties:
+                  name:
+                    description: Name of the referenced object.
+                    type: string
+                  policy:
+                    description: Policies for referencing.
+                    properties:
+                      resolution:
+                        default: Required
+                        description: |-
+                          Resolution specifies whether resolution of this reference is required.
+                          The default is 'Required', which means the reconcile will fail if the
+                          reference cannot be resolved. 'Optional' means this reference will be
+                          a no-op if it cannot be resolved.
+                        enum:
+                        - Required
+                        - Optional
+                        type: string
+                      resolve:
+                        description: |-
+                          Resolve specifies when this reference should be resolved. The default
+                          is 'IfNotPresent', which will attempt to resolve the reference only when
+                          the corresponding field is not present. Use 'Always' to resolve the
+                          reference on every reconcile.
+                        enum:
+                        - Always
+                        - IfNotPresent
+                        type: string
+                    type: object
+                required:
+                - name
+                type: object
+              writeConnectionSecretToRef:
+                description: |-
+                  WriteConnectionSecretToReference specifies the namespace and name of a
+                  Secret to which any connection details for this managed resource should
+                  be written. Connection details frequently include the endpoint, username,
+                  and password required to connect to the managed resource.
+                properties:
+                  name:
+                    description: Name of the secret.
+                    type: string
+                  namespace:
+                    description: Namespace of the secret.
+                    type: string
+                required:
+                - name
+                - namespace
+                type: object
+            required:
+            - forProvider
+            type: object
+          status:
+            description: A ProxyRouteStatus represents the observed state of a ProxyRoute.
+            properties:
+              atProvider:
+                description: ProxyRouteObservation represents the observed state of
+                  a ProxyRoute.
+                properties:
+                  routeId:
+                    description: RouteID is the ID assigned by Caddy to this route.
+                    type: string
+                  upstreamStatuses:
+                    description: UpstreamStatuses contains the health status of upstreams.
+                    items:
+                      description: UpstreamStatus represents the health status of
+                        an upstream.
+                      properties:
+                        address:
+                          description: Address is the upstream address.
+                          type: string
+                        healthy:
+                          description: Healthy indicates if the upstream is healthy.
+                          type: boolean
+                        numRequests:
+                          description: NumRequests is the number of active requests
+                            to this upstream.
+                          type: integer
+                      required:
+                      - address
+                      - healthy
+                      - numRequests
+                      type: object
+                    type: array
+                type: object
+              conditions:
+                description: Conditions of the resource.
+                items:
+                  description: A Condition that may apply to a resource.
+                  properties:
+                    lastTransitionTime:
+                      description: |-
+                        LastTransitionTime is the last time this condition transitioned from one
+                        status to another.
+                      format: date-time
+                      type: string
+                    message:
+                      description: |-
+                        A Message containing details about this condition's last transition from
+                        one status to another, if any.
+                      type: string
+                    observedGeneration:
+                      description: |-
+                        ObservedGeneration represents the .metadata.generation that the condition was set based upon.
+                        For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date
+                        with respect to the current state of the instance.
+                      format: int64
+                      type: integer
+                    reason:
+                      description: A Reason for this condition's last transition from
+                        one status to another.
+                      type: string
+                    status:
+                      description: Status of this condition; is it currently True,
+                        False, or Unknown?
+                      type: string
+                    type:
+                      description: |-
+                        Type of this condition. At most one of each condition type may apply to
+                        a resource at any point in time.
+                      type: string
+                  required:
+                  - lastTransitionTime
+                  - reason
+                  - status
+                  - type
+                  type: object
+                type: array
+                x-kubernetes-list-map-keys:
+                - type
+                x-kubernetes-list-type: map
+              observedGeneration:
+                description: |-
+                  ObservedGeneration is the latest metadata.generation
+                  which resulted in either a ready state, or stalled due to error
+                  it can not recover from without human intervention.
+                format: int64
+                type: integer
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

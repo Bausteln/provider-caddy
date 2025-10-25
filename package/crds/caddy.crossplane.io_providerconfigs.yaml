@@ -4,14 +4,14 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.18.0
-  name: providerconfigs.template.crossplane.io
+  name: providerconfigs.caddy.crossplane.io
 spec:
-  group: template.crossplane.io
+  group: caddy.crossplane.io
   names:
     categories:
     - crossplane
     - provider
-    - template
+    - caddy
     kind: ProviderConfig
     listKind: ProviderConfigList
     plural: providerconfigs

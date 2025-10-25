@@ -1,0 +1,17 @@
+apiVersion: config.caddy.crossplane.io/v1alpha1
+kind: ProxyRoute
+metadata:
+  name: simple-proxy
+spec:
+  forProvider:
+    # Caddy admin API endpoint
+    caddyEndpoint: http://localhost:2019
+
+    # Simple host-based routing
+    match:
+      host:
+        - api.example.com
+
+    # Single backend
+    upstreams:
+      - dial: localhost:8080
