@@ -20,8 +20,8 @@ package apis
 import (
 	"k8s.io/apimachinery/pkg/runtime"
 
-	caddyv1alpha1 "github.com/crossplane/provider-caddy/apis/v1alpha1"
 	configv1alpha1 "github.com/crossplane/provider-caddy/apis/config/v1alpha1"
+	caddyv1alpha1 "github.com/crossplane/provider-caddy/apis/v1alpha1"
 )
 
 func init() {

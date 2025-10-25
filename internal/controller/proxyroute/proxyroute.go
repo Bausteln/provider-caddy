@@ -37,15 +37,15 @@ import (
 )
 
 const (
-	errNotProxyRoute    = "managed resource is not a ProxyRoute custom resource"
-	errTrackPCUsage     = "cannot track ProviderConfig usage"
-	errGetPC            = "cannot get ProviderConfig"
-	errGetCreds         = "cannot get credentials"
-	errNewClient        = "cannot create new Caddy client"
-	errCreateRoute      = "cannot create proxy route"
-	errUpdateRoute      = "cannot update proxy route"
-	errDeleteRoute      = "cannot delete proxy route"
-	errGetRoute         = "cannot get proxy route"
+	errNotProxyRoute = "managed resource is not a ProxyRoute custom resource"
+	errTrackPCUsage  = "cannot track ProviderConfig usage"
+	errGetPC         = "cannot get ProviderConfig"
+	errGetCreds      = "cannot get credentials"
+	errNewClient     = "cannot create new Caddy client"
+	errCreateRoute   = "cannot create proxy route"
+	errUpdateRoute   = "cannot update proxy route"
+	errDeleteRoute   = "cannot delete proxy route"
+	errGetRoute      = "cannot get proxy route"
 )
 
 // SetupGated adds a controller that reconciles ProxyRoute managed resources with safe-start support.
@@ -235,6 +235,8 @@ func (e *external) Disconnect(ctx context.Context) error {
 }
 
 // convertToProxyRoute converts the CRD spec to the Caddy client format.
+//
+//nolint:gocyclo // Conversion function with linear complexity
 func convertToProxyRoute(cr *v1alpha1.ProxyRoute) *caddyclient.ProxyRoute {
 	route := &caddyclient.ProxyRoute{
 		Terminal: true,

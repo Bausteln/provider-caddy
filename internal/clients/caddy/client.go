@@ -43,28 +43,28 @@ func NewClient(endpoint string) *Client {
 
 // ProxyRoute represents a Caddy reverse proxy route configuration.
 type ProxyRoute struct {
-	Match      *Match       `json:"match,omitempty"`
-	Handle     []Handler    `json:"handle"`
-	Terminal   bool         `json:"terminal,omitempty"`
+	Match    *Match    `json:"match,omitempty"`
+	Handle   []Handler `json:"handle"`
+	Terminal bool      `json:"terminal,omitempty"`
 }
 
 // Match represents route matching conditions.
 type Match struct {
-	Host   []string              `json:"host,omitempty"`
-	Path   []string              `json:"path,omitempty"`
-	Method []string              `json:"method,omitempty"`
-	Header map[string][]string   `json:"header,omitempty"`
+	Host   []string            `json:"host,omitempty"`
+	Path   []string            `json:"path,omitempty"`
+	Method []string            `json:"method,omitempty"`
+	Header map[string][]string `json:"header,omitempty"`
 }
 
 // Handler represents a route handler.
 type Handler struct {
-	Handler       string           `json:"handler"`
-	Routes        []Route          `json:"routes,omitempty"`
-	Upstreams     []Upstream       `json:"upstreams,omitempty"`
-	LoadBalancing *LoadBalancing   `json:"load_balancing,omitempty"`
-	Headers       *Headers         `json:"headers,omitempty"`
-	HealthChecks  *HealthChecks    `json:"health_checks,omitempty"`
-	Transport     *Transport       `json:"transport,omitempty"`
+	Handler       string         `json:"handler"`
+	Routes        []Route        `json:"routes,omitempty"`
+	Upstreams     []Upstream     `json:"upstreams,omitempty"`
+	LoadBalancing *LoadBalancing `json:"load_balancing,omitempty"`
+	Headers       *Headers       `json:"headers,omitempty"`
+	HealthChecks  *HealthChecks  `json:"health_checks,omitempty"`
+	Transport     *Transport     `json:"transport,omitempty"`
 }
 
 // Route represents a subroute.
@@ -80,9 +80,9 @@ type Upstream struct {
 
 // LoadBalancing represents load balancing configuration.
 type LoadBalancing struct {
-	SelectionPolicy   *SelectionPolicy `json:"selection_policy,omitempty"`
-	TryDuration       string          `json:"try_duration,omitempty"`
-	TryInterval       string          `json:"try_interval,omitempty"`
+	SelectionPolicy *SelectionPolicy `json:"selection_policy,omitempty"`
+	TryDuration     string           `json:"try_duration,omitempty"`
+	TryInterval     string           `json:"try_interval,omitempty"`
 }
 
 // SelectionPolicy represents a load balancing selection policy.
@@ -160,7 +160,7 @@ func (c *Client) CreateProxyRoute(ctx context.Context, serverName string, route 
 	if err != nil {
 		return "", fmt.Errorf("failed to create route: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		body, _ := io.ReadAll(resp.Body)
@@ -190,6 +190,8 @@ func (c *Client) UpdateProxyRoute(ctx context.Context, serverName, routeID strin
 }
 
 // DeleteProxyRoute deletes a proxy route from Caddy.
+//
+//nolint:gocyclo // Complex due to multi-step deletion process
 func (c *Client) DeleteProxyRoute(ctx context.Context, serverName, routeID string) error {
 	// This is a simplified implementation
 	// In production, you'd use Caddy's array removal or @id directives
@@ -204,7 +206,7 @@ func (c *Client) DeleteProxyRoute(ctx context.Context, serverName, routeID strin
 	if err != nil {
 		return fmt.Errorf("failed to get routes: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode == http.StatusNotFound {
 		// Route already doesn't exist
@@ -246,7 +248,7 @@ func (c *Client) DeleteProxyRoute(ctx context.Context, serverName, routeID strin
 	if err != nil {
 		return fmt.Errorf("failed to delete route: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		body, _ := io.ReadAll(resp.Body)
@@ -269,7 +271,7 @@ func (c *Client) GetProxyRoute(ctx context.Context, serverName, routeID string) 
 	if err != nil {
 		return nil, fmt.Errorf("failed to get routes: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode == http.StatusNotFound {
 		return nil, fmt.Errorf("route not found")
@@ -308,7 +310,7 @@ func (c *Client) GetUpstreamStatus(ctx context.Context) ([]UpstreamStatus, error
 	if err != nil {
 		return nil, fmt.Errorf("failed to get upstream status: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		body, _ := io.ReadAll(resp.Body)
