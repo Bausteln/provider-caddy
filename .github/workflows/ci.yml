@@ -177,6 +177,9 @@ jobs:
     runs-on: ubuntu-22.04
     needs: detect-noop
     if: needs.detect-noop.outputs.noop != 'true'
+    permissions:
+      contents: read
+      packages: write
 
     steps:
       - name: Setup QEMU
