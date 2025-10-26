@@ -1,0 +1,21 @@
+apiVersion: config.caddy.crossplane.io/v1alpha1
+kind: ProxyRoute
+metadata:
+  name: test-proxy
+spec:
+  forProvider:
+    # Point to Caddy admin API via localhost (requires port-forward)
+    caddyEndpoint: http://localhost:2019
+
+    # Match all requests to test.example.com
+    match:
+      host:
+        - test.example.com
+
+    # Proxy to backend service (use cluster DNS since Caddy is inside cluster)
+    upstreams:
+      - dial: backend.caddy-system.svc.cluster.local:8081
+
+    # Optional: Add some load balancing
+    loadBalancing:
+      policy: round_robin

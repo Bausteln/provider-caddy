@@ -1,0 +1,129 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: caddy-system
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: caddy-config
+  namespace: caddy-system
+data:
+  Caddyfile: |
+    {
+      admin :2019
+      # Enable debug logging
+      debug
+    }
+
+    # Default response for testing
+    :8080 {
+      respond "Hello from Caddy! No routes configured yet."
+    }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: caddy
+  namespace: caddy-system
+  labels:
+    app: caddy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: caddy
+  template:
+    metadata:
+      labels:
+        app: caddy
+    spec:
+      containers:
+      - name: caddy
+        image: caddy:latest
+        ports:
+        - containerPort: 2019
+          name: admin
+          protocol: TCP
+        - containerPort: 8080
+          name: http
+          protocol: TCP
+        volumeMounts:
+        - name: config
+          mountPath: /etc/caddy
+        livenessProbe:
+          httpGet:
+            path: /config/
+            port: 2019
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /config/
+            port: 2019
+          initialDelaySeconds: 3
+          periodSeconds: 5
+      volumes:
+      - name: config
+        configMap:
+          name: caddy-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: caddy
+  namespace: caddy-system
+spec:
+  selector:
+    app: caddy
+  ports:
+  - name: admin
+    port: 2019
+    targetPort: 2019
+  - name: http
+    port: 8080
+    targetPort: 8080
+  type: ClusterIP
+---
+# Backend test service (what Caddy will proxy to)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+  namespace: caddy-system
+  labels:
+    app: backend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+      - name: backend
+        image: hashicorp/http-echo:latest
+        args:
+        - "-text=Backend Response"
+        - "-listen=:8081"
+        ports:
+        - containerPort: 8081
+          name: http
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend
+  namespace: caddy-system
+spec:
+  selector:
+    app: backend
+  ports:
+  - name: http
+    port: 8081
+    targetPort: 8081
+  type: ClusterIP

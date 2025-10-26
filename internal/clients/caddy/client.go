@@ -43,13 +43,13 @@ func NewClient(endpoint string) *Client {
 
 // ProxyRoute represents a Caddy reverse proxy route configuration.
 type ProxyRoute struct {
-	Match    *Match    `json:"match,omitempty"`
-	Handle   []Handler `json:"handle"`
-	Terminal bool      `json:"terminal,omitempty"`
+	Match    []MatchSet `json:"match,omitempty"`
+	Handle   []Handler  `json:"handle"`
+	Terminal bool       `json:"terminal,omitempty"`
 }
 
-// Match represents route matching conditions.
-type Match struct {
+// MatchSet represents a set of matchers (Caddy uses array of matcher sets).
+type MatchSet struct {
 	Host   []string            `json:"host,omitempty"`
 	Path   []string            `json:"path,omitempty"`
 	Method []string            `json:"method,omitempty"`
@@ -328,19 +328,22 @@ func (c *Client) GetUpstreamStatus(ctx context.Context) ([]UpstreamStatus, error
 // generateRouteID generates a unique ID for a route based on its configuration.
 // This is a simplified implementation - in production, you'd use Caddy's @id directive.
 func generateRouteID(route *ProxyRoute) string {
-	if route.Match == nil {
+	if len(route.Match) == 0 {
 		return "default"
 	}
 
+	// Use first matcher set for ID generation
+	matchSet := route.Match[0]
+
 	var parts []string
-	if len(route.Match.Host) > 0 {
-		parts = append(parts, "host:"+strings.Join(route.Match.Host, ","))
+	if len(matchSet.Host) > 0 {
+		parts = append(parts, "host:"+strings.Join(matchSet.Host, ","))
 	}
-	if len(route.Match.Path) > 0 {
-		parts = append(parts, "path:"+strings.Join(route.Match.Path, ","))
+	if len(matchSet.Path) > 0 {
+		parts = append(parts, "path:"+strings.Join(matchSet.Path, ","))
 	}
-	if len(route.Match.Method) > 0 {
-		parts = append(parts, "method:"+strings.Join(route.Match.Method, ","))
+	if len(matchSet.Method) > 0 {
+		parts = append(parts, "method:"+strings.Join(matchSet.Method, ","))
 	}
 
 	if len(parts) == 0 {

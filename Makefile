@@ -97,6 +97,11 @@ dev: $(KIND) $(KUBECTL)
 	@$(KUBECTL) cluster-info --context kind-$(PROJECT_NAME)-dev
 	@$(INFO) Installing Provider Caddy CRDs
 	@$(KUBECTL) apply -R -f package/crds
+	@$(INFO) Deploying Caddy server and backend test service
+	@$(KUBECTL) apply -f test/manifests/caddy-deployment.yaml
+	@$(INFO) Waiting for Caddy to be ready
+	@$(KUBECTL) wait --for=condition=ready pod -l app=caddy -n caddy-system --timeout=60s || true
+	@$(KUBECTL) wait --for=condition=ready pod -l app=backend -n caddy-system --timeout=60s || true
 	@$(INFO) Starting Provider Caddy controllers
 	@$(GO) run cmd/provider/main.go --debug
 

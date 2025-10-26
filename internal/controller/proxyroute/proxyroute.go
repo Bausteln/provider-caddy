@@ -247,13 +247,15 @@ func convertToProxyRoute(cr *v1alpha1.ProxyRoute) *caddyclient.ProxyRoute {
 		Terminal: true,
 	}
 
-	// Convert match conditions
+	// Convert match conditions (Caddy expects array of matcher sets)
 	if cr.Spec.ForProvider.Match != nil {
-		route.Match = &caddyclient.Match{
-			Host:   cr.Spec.ForProvider.Match.Host,
-			Path:   cr.Spec.ForProvider.Match.Path,
-			Method: cr.Spec.ForProvider.Match.Method,
-			Header: cr.Spec.ForProvider.Match.Headers,
+		route.Match = []caddyclient.MatchSet{
+			{
+				Host:   cr.Spec.ForProvider.Match.Host,
+				Path:   cr.Spec.ForProvider.Match.Path,
+				Method: cr.Spec.ForProvider.Match.Method,
+				Header: cr.Spec.ForProvider.Match.Headers,
+			},
 		}
 	}
 
