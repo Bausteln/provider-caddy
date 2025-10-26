@@ -21,16 +21,12 @@ This provider allows you to configure Caddy reverse proxy rules and other settin
 ### Prerequisites
 
 - Kubernetes cluster
-- [Crossplane](https://crossplane.io/) installed
-- Running Caddy server with Admin API enabled
+- [Crossplane](https://crossplane.io/) installed (v1.14.0+)
+- Caddy server with Admin API enabled
 
 ### Install the Provider
 
-```bash
-kubectl crossplane install provider crossplane/provider-caddy:latest
-```
-
-Or using a Provider manifest:
+Using a Provider manifest (recommended):
 
 ```yaml
 apiVersion: pkg.crossplane.io/v1
@@ -38,7 +34,37 @@ kind: Provider
 metadata:
   name: provider-caddy
 spec:
-  package: crossplane/provider-caddy:latest
+  package: ghcr.io/bausteln/provider-caddy:v0.1.0
+```
+
+Apply it:
+
+```bash
+kubectl apply -f provider.yaml
+```
+
+Or install the latest version:
+
+```yaml
+apiVersion: pkg.crossplane.io/v1
+kind: Provider
+metadata:
+  name: provider-caddy
+spec:
+  package: ghcr.io/bausteln/provider-caddy:latest
+```
+
+### Verify Installation
+
+```bash
+# Check provider is installed and healthy
+kubectl get providers
+
+# Check provider pod is running
+kubectl get pods -n crossplane-system
+
+# View provider logs
+kubectl logs -n crossplane-system -l pkg.crossplane.io/provider=provider-caddy
 ```
 
 ## Quick Start

@@ -245,6 +245,44 @@ jobs:
           name: output
           path: _output/**
 
-      - name: Publish Artifacts
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        if: github.event_name != 'pull_request'
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish Artifacts to Upbound
         if: env.UPBOUND_MARKETPLACE_PUSH_ROBOT_USR != ''
         run: make publish BRANCH_NAME=${GITHUB_REF##*/}
+
+      - name: Publish to GitHub Container Registry
+        if: github.event_name != 'pull_request'
+        run: |
+          # Get version from git
+          VERSION=$(git describe --tags --always --dirty)
+          REGISTRY=ghcr.io
+          OWNER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          IMAGE=${REGISTRY}/${OWNER}/provider-caddy
+
+          # Tag and push
+          docker tag build-$(git rev-parse --short HEAD)/provider-caddy-amd64:latest ${IMAGE}:${VERSION}-amd64
+          docker tag build-$(git rev-parse --short HEAD)/provider-caddy-arm64:latest ${IMAGE}:${VERSION}-arm64
+
+          docker push ${IMAGE}:${VERSION}-amd64
+          docker push ${IMAGE}:${VERSION}-arm64
+
+          # Create and push manifest
+          docker manifest create ${IMAGE}:${VERSION} \
+            ${IMAGE}:${VERSION}-amd64 \
+            ${IMAGE}:${VERSION}-arm64
+          docker manifest push ${IMAGE}:${VERSION}
+
+          # Tag as latest on main branch
+          if [ "${{ github.ref }}" == "refs/heads/main" ]; then
+            docker manifest create ${IMAGE}:latest \
+              ${IMAGE}:${VERSION}-amd64 \
+              ${IMAGE}:${VERSION}-arm64
+            docker manifest push ${IMAGE}:latest
+          fi
