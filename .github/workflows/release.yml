@@ -81,9 +81,24 @@ jobs:
           OWNER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
           IMAGE=${REGISTRY}/${OWNER}/provider-caddy
 
+          # Find the actual built images (BUILD_REGISTRY is based on hostname+dir hash)
+          AMD64_IMAGE=$(docker images --format '{{.Repository}}:{{.Tag}}' | grep 'provider-caddy-amd64' | grep '^build-' | head -1)
+          ARM64_IMAGE=$(docker images --format '{{.Repository}}:{{.Tag}}' | grep 'provider-caddy-arm64' | grep '^build-' | head -1)
+
+          if [ -z "$AMD64_IMAGE" ] || [ -z "$ARM64_IMAGE" ]; then
+            echo "Error: Could not find built images"
+            echo "Available images:"
+            docker images
+            exit 1
+          fi
+
+          echo "Found images:"
+          echo "  AMD64: $AMD64_IMAGE"
+          echo "  ARM64: $ARM64_IMAGE"
+
           # Tag and push architecture-specific images
-          docker tag build-$(git rev-parse --short HEAD)/provider-caddy-amd64:latest ${IMAGE}:${VERSION}-amd64
-          docker tag build-$(git rev-parse --short HEAD)/provider-caddy-arm64:latest ${IMAGE}:${VERSION}-arm64
+          docker tag $AMD64_IMAGE ${IMAGE}:${VERSION}-amd64
+          docker tag $ARM64_IMAGE ${IMAGE}:${VERSION}-arm64
 
           docker push ${IMAGE}:${VERSION}-amd64
           docker push ${IMAGE}:${VERSION}-arm64
